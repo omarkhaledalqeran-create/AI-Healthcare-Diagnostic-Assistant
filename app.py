@@ -11,45 +11,98 @@ import streamlit as st
 import numpy as np
 import joblib
 
-# تحميل الموديل
+# Load model and scaler
 model = joblib.load('heart_disease_model.pkl')
 scaler = joblib.load('scaler.pkl')
 
-st.set_page_config(page_title="AI Healthcare Diagnostic Assistant")
+st.set_page_config(page_title="AI Healthcare Diagnostic Assistant", layout="wide")
 
 st.title("❤️ AI Healthcare Diagnostic Assistant")
 st.write("Heart Disease Prediction System")
 
-st.sidebar.header("Patient Information")
+st.sidebar.header("🧑‍⚕️ Patient Information")
 
 def user_input():
-    age = st.sidebar.slider('Age', 20, 80, 50)
-    sex = st.sidebar.selectbox('Sex', [0, 1])  # 0: Female, 1: Male
-    cp = st.sidebar.selectbox('Chest Pain Type (0-3)', [0,1,2,3])
-    trestbps = st.sidebar.slider('Resting Blood Pressure', 80, 200, 120)
-    chol = st.sidebar.slider('Cholesterol', 100, 400, 200)
-    fbs = st.sidebar.selectbox('Fasting Blood Sugar > 120 mg/dl', [0,1])
-    restecg = st.sidebar.selectbox('Rest ECG (0-2)', [0,1,2])
-    thalach = st.sidebar.slider('Max Heart Rate', 60, 220, 150)
-    exang = st.sidebar.selectbox('Exercise Induced Angina', [0,1])
+    age = st.sidebar.slider('Age (years)', 20, 80, 50)
+
+    # Sex
+    sex_label = st.sidebar.selectbox('Sex', ['Female', 'Male'])
+    sex = 1 if sex_label == 'Male' else 0
+
+    # Chest Pain Type
+    cp_label = st.sidebar.selectbox(
+        'Chest Pain Type',
+        ['Typical Angina', 'Atypical Angina', 'Non-anginal Pain', 'Asymptomatic']
+    )
+    cp = [
+        'Typical Angina',
+        'Atypical Angina',
+        'Non-anginal Pain',
+        'Asymptomatic'
+    ].index(cp_label)
+
+    trestbps = st.sidebar.slider('Resting Blood Pressure (mm Hg)', 80, 200, 120)
+    chol = st.sidebar.slider('Cholesterol (mg/dl)', 100, 400, 200)
+
+    # Fasting Blood Sugar
+    fbs_label = st.sidebar.selectbox(
+        'Fasting Blood Sugar > 120 mg/dl',
+        ['No', 'Yes']
+    )
+    fbs = 1 if fbs_label == 'Yes' else 0
+
+    # Rest ECG
+    restecg_label = st.sidebar.selectbox(
+        'Resting ECG Result',
+        ['Normal', 'ST-T Wave Abnormality', 'Left Ventricular Hypertrophy']
+    )
+    restecg = [
+        'Normal',
+        'ST-T Wave Abnormality',
+        'Left Ventricular Hypertrophy'
+    ].index(restecg_label)
+
+    thalach = st.sidebar.slider('Maximum Heart Rate Achieved', 60, 220, 150)
+
+    # Exercise Induced Angina
+    exang_label = st.sidebar.selectbox(
+        'Exercise Induced Angina',
+        ['No', 'Yes']
+    )
+    exang = 1 if exang_label == 'Yes' else 0
+
     oldpeak = st.sidebar.slider('ST Depression', 0.0, 6.0, 1.0)
-    slope = st.sidebar.selectbox('Slope (0-2)', [0,1,2])
-    ca = st.sidebar.slider('Major Vessels (0-3)', 0, 3, 0)
-    thal = st.sidebar.selectbox('Thal (1 = normal, 2 = fixed, 3 = reversible)', [1,2,3])
+
+    # Slope
+    slope_label = st.sidebar.selectbox(
+        'Slope of ST Segment',
+        ['Upsloping', 'Flat', 'Downsloping']
+    )
+    slope = ['Upsloping', 'Flat', 'Downsloping'].index(slope_label)
+
+    ca = st.sidebar.slider('Number of Major Vessels (0–3)', 0, 3, 0)
+
+    # Thalassemia
+    thal_label = st.sidebar.selectbox(
+        'Thalassemia',
+        ['Normal', 'Fixed Defect', 'Reversible Defect']
+    )
+    thal = {'Normal': 1, 'Fixed Defect': 2, 'Reversible Defect': 3}[thal_label]
 
     data = np.array([[age, sex, cp, trestbps, chol, fbs, restecg,
                       thalach, exang, oldpeak, slope, ca, thal]])
     return data
 
+
 input_data = user_input()
 
-# Scaling
+# Scale input
 input_scaled = scaler.transform(input_data)
 
-if st.button("Predict"):
+if st.button("🔍 Predict"):
     prediction = model.predict(input_scaled)
 
     if prediction[0] == 1:
-        st.error("⚠️ Heart Disease Detected. Please consult a doctor.")
+        st.error("⚠️ Heart Disease Detected. Please consult a cardiologist.")
     else:
-        st.success("✅ No Heart Disease Detected.")
+        st.success("✅ No Heart Disease Detected. Heart condition appears normal.")
